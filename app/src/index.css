@@ -1,0 +1,289 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * 外壳两档：Signal Theme 的深海军蓝与暖米。
+ * 数值写在这里（而不是 Tailwind 配置里），切换外壳时只换一组变量，
+ * 组件里的类名（bg-shell / text-fg / border-edge …）完全不用改。
+ */
+:root {
+  /* 深海军蓝（Signal Dark） */
+  --c-shell: 28 38 68; /* #1c2644 */
+  --c-shell-alt: 35 47 85; /* #232f55 */
+  --c-shell-deep: 22 30 53; /* #161e35 */
+  --c-fg: 226 220 208; /* #e2dcd0 */
+  --c-fg-2: 154 166 184; /* #9aa6b8 */
+  --c-fg-3: 131 143 166; /* #838fa6 */
+  --c-edge: 46 61 92; /* #2e3d5c */
+  --c-gold: 200 168 112; /* #c8a870 */
+  --c-alert: 201 102 74; /* #c9664a */
+  --c-grid: 255 255 255;
+  --c-grid-alpha: 0.035;
+  --c-paper-shadow: 0 26px 62px -34px rgba(4, 8, 18, 0.85);
+}
+
+/* 暖米（Signal Light）：同一套 Signal 血脉，只是把底换成暖米色 */
+[data-shell='light'] {
+  --c-shell: 240 236 227; /* #f0ece3 */
+  --c-shell-alt: 230 224 212; /* #e6e0d4 */
+  --c-shell-deep: 220 213 198; /* #dcd5c6 */
+  --c-fg: 26 32 48; /* #1a2030 */
+  --c-fg-2: 78 90 110; /* #4e5a6e */
+  --c-fg-3: 95 106 125; /* #5f6a7d */
+  --c-edge: 202 196 180; /* #cac4b4 */
+  --c-gold: 125 97 48; /* #7d6130 */
+  --c-alert: 176 76 54; /* #b04c36 */
+  --c-grid: 28 38 68;
+  --c-grid-alpha: 0.05;
+  /* 浅底上白纸靠一圈细边 + 软阴影与底色分开 */
+  --c-paper-shadow:
+    0 18px 42px -26px rgba(26, 32, 48, 0.4), 0 0 0 1px rgba(26, 32, 48, 0.12);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: rgb(var(--c-shell));
+  color: rgb(var(--c-fg));
+  font-family:
+    'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 工作台的 80px 网格纹理：只有一层极淡的网格线，不抢纸面的注意力 */
+.workbench {
+  background-color: rgb(var(--c-shell));
+  background-image:
+    linear-gradient(rgb(var(--c-grid) / var(--c-grid-alpha)) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(var(--c-grid) / var(--c-grid-alpha)) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+
+::selection {
+  background: rgb(var(--c-gold) / 0.28);
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--c-gold));
+  outline-offset: 2px;
+}
+
+/* ---------- 工具外壳的通用件 ---------- */
+@layer components {
+  /* 线框按钮：方角、1px 边框，不用阴影 */
+  .btn {
+    @apply h-9 inline-flex items-center gap-2 px-3.5 text-[12px] tracking-[0.06em] text-fg-2 border border-edge bg-transparent transition-colors;
+  }
+  .btn:hover {
+    @apply text-gold border-gold;
+  }
+  .btn:disabled {
+    @apply opacity-40 cursor-not-allowed;
+  }
+  .btn:disabled:hover {
+    @apply text-fg-2 border-edge;
+  }
+  .btn-solid {
+    @apply bg-gold text-shell border-gold;
+  }
+  /* 实心按钮悬停时不能继承 .btn:hover 的 text-gold，否则金字金底看不见 */
+  .btn-solid:hover {
+    @apply text-shell border-gold opacity-90;
+  }
+
+  /* 下划线输入：表单看起来像一张待填的表，而不是 SaaS 卡片 */
+  .line-input {
+    @apply w-full min-w-0 bg-transparent border-0 border-b border-edge pb-1.5 pl-0 pr-1 text-[12.5px] text-fg placeholder:text-fg-3 focus:outline-none focus:border-gold transition-colors;
+  }
+  /* 字段名用等宽小字：像旧杂志上标注栏目的标签 */
+  .field-label {
+    /* 不做 uppercase：GitHub 这类专名大小写要和纸面上写的一致 */
+    @apply block font-mono text-[10.5px] tracking-[0.1em] text-fg-2 mb-1.5;
+  }
+}
+
+/* A4 纸张 */
+.a4-paper {
+  width: 210mm;
+  min-height: 297mm;
+  background: white;
+  box-shadow: var(--c-paper-shadow);
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/**
+ * 排版微调 · 字体组合：
+ * 字号/行距/照片的倍率已在类名里用 calc(Npx*var(--fs|var(--lh|var(--photo),1)) 表达，
+ * 默认值 1 时与原来逐字节等价；字体用 data-font 属性切换。
+ * 字体只覆盖「有字的元素」，用 !important 压过 Tailwind 的 font-serif / serif-digits；
+ * 装饰性的伪元素横线（before/after）不受影响。
+ */
+#resume-preview[data-font='heiti'] :is(.a4-paper, h1, h2, h3, p, li, td, th, span),
+#resume-preview[data-font='heiti'] {
+  font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Heiti SC', sans-serif !important;
+}
+#resume-preview[data-font='songti'] :is(.a4-paper, h1, h2, h3, p, li, td, th, span),
+#resume-preview[data-font='songti'] {
+  font-family: 'Songti SC', 'STSong', 'Noto Serif CJK SC', 'SimSun', serif !important;
+}
+#resume-preview[data-font='kaiti'] :is(.a4-paper, h1, h2, h3, p, li, td, th, span),
+#resume-preview[data-font='kaiti'] {
+  font-family: 'Kaiti SC', 'STKaiti', 'KaiTi', '楷体', serif !important;
+}
+
+/* 正文首个标题不再额外留顶部间距（页头已有间距） */
+.markdown-body > div:first-child > h2,
+.markdown-body > h2:first-child {
+  margin-top: 0;
+}
+
+/**
+ * 数字字形修复：
+ * 衬线主题（商务正式 / 学术经典）中，衬线字体的数字会渲染成偏斜的衬线字形，
+ * 观感与中文不协调。通过 unicode-range 把数字段字符切给无衬线字体，
+ * 数字正常、中文保持衬线风格。
+ */
+@font-face {
+  font-family: 'digits-sans';
+  src:
+    local('Helvetica Neue'),
+    local('PingFang SC'),
+    local('Microsoft YaHei'),
+    local('Arial');
+  unicode-range:
+    U+002B,
+    /* + */
+    U+002D,
+    /* - */
+    U+002E,
+    /* . */
+    U+002F,
+    /* / */
+    U+0025,
+    /* % */
+    U+003A,
+    /* : */
+    U+0030-0039; /* 0-9 */
+}
+
+/* 衬线主题的纸张：先尝试 digits-sans（仅覆盖数字段），其余回退衬线 */
+.serif-digits {
+  font-family:
+    'digits-sans',
+    'Songti SC',
+    'STSong',
+    'Noto Serif CJK SC',
+    'SimSun',
+    ui-serif,
+    Georgia,
+    'Times New Roman',
+    serif;
+}
+
+/* 细滚动条 */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--c-fg) / 0.18);
+  border-radius: 0;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--c-fg) / 0.32);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 打印导出 PDF：隐藏编辑器界面，简历铺满整张 A4 */
+@media print {
+  header,
+  .layout-toolbar,
+  aside,
+  .panel-divider,
+  .stage-ruler,
+  .stage-caption {
+    display: none !important;
+  }
+
+  /* 打印时一律白底：纸面之外不能带出屏幕的外壳底色与网格纹理 */
+  html,
+  body,
+  #root,
+  .preview-panel,
+  .workbench,
+  .stage-center,
+  .stage-frame {
+    background: #fff !important;
+  }
+
+  /* 解开屏幕端的高度/滚动限制，让内容可以自由分页 */
+  html,
+  body,
+  #root,
+  .h-screen,
+  .preview-panel,
+  .stage-center,
+  .stage-frame {
+    height: auto !important;
+    min-height: 0 !important;
+    width: auto !important;
+    overflow: visible !important;
+  }
+
+  .preview-panel {
+    display: block !important;
+    padding: 0 !important;
+    background: none !important;
+  }
+
+  .stage-center,
+  .stage-frame {
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #print-scaler {
+    transform: none !important;
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+  }
+
+  #resume-preview {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 auto;
+    min-height: auto;
+    /* 打印时去掉底部留白，避免多出一页近乎空白的纸 */
+    padding-bottom: 0 !important;
+  }
+
+  /* 标题不孤立在页尾：与后文保持同页 */
+  .markdown-body h1,
+  .markdown-body h2,
+  .markdown-body h3,
+  .markdown-body h4 {
+    break-after: avoid;
+    break-inside: avoid;
+  }
+
+  .markdown-body table,
+  .markdown-body tr {
+    break-inside: avoid;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 0;
+}

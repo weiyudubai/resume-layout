@@ -1,0 +1,31 @@
+# macOS
+.DS_Store
+
+# 依赖与构建产物（app 目录下已有同名规则，这里兜底）
+node_modules/
+dist/
+dist-ssr/
+*.log
+
+# 本地缓存/临时文件
+.npm-cache/
+.npm-logs/
+*.local
+
+# 本机看板内嵌产物（inline_build.py 生成，不随仓库发布）
+app/widget.html
+
+# 设计过程的临时产物（视觉方案稿、截图脚本）
+.mock2/
+.tmp-check/
+
+# 环境变量与密钥（真实简历数据同理，不要提交）
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# 编辑器
+.vscode/
+.idea/
