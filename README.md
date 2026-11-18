@@ -102,17 +102,27 @@ python3 inline_build.py   # 内联成单文件 HTML
 
 ## 部署
 
-线上版走 GitHub → Cloudflare Pages：
+线上版跑在阿里云香港的一台 ECS 上，用 Caddy 直接托管构建好的静态文件，不经过 Cloudflare Pages：
 
 | 项 | 值 |
 | --- | --- |
-| Root directory | `app` |
-| Build command | `npm ci && npm run build` |
-| Build output directory | `dist` |
-| 环境变量 | `NODE_VERSION=22` |
-| 自定义域名 | `jianli.weiyudubai.com` |
+| 站点地址 | `https://jianli.weiyudubai.com` |
+| 服务器目录 | `/var/www/jianli` |
+| Web 服务器 | Caddy（`/etc/caddy/Caddyfile`，自动签发/续期 Let's Encrypt 证书） |
+| DNS | 阿里云云解析 `A jianli → 47.83.177.108` |
 
-部署后每次 `git push` 自动构建。简历数据只存在浏览器 localStorage，`file://`、`pages.dev`、自定义域名之间互不相通；换地址或换设备时，用「版本 → 导出备份 / 导入备份」迁移。
+更新线上版本（本机执行）：
+
+```bash
+cd app
+npm ci
+npm run build
+rsync -avz --delete app/dist/ root@47.83.177.108:/var/www/jianli/
+```
+
+`git push` 只更新 GitHub 上的源码，不会自动部署；每次改完要手动跑上面的构建 + rsync。
+
+简历数据只存在浏览器 localStorage，`file://`、线上域名、`localhost` 之间互不相通；换地址或换设备时，用「版本 → 导出备份 / 导入备份」迁移。
 
 ## 文档自检
 
